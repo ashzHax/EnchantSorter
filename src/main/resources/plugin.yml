@@ -1,0 +1,10 @@
+name: EnchantSorter
+author: ashz
+main: io.ashz.EnchantSorter
+version: 1.0
+api-version: 1.19
+commands:
+  enchantsort:
+    description: Re-order your items enchantments
+    aliases: [es]
+    usage: Command is invalid! /enchantsort
