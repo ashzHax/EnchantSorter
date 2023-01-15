@@ -10,7 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 
 public class EnchantSorter extends JavaPlugin {
-    public String pluginName = "PlayerConnection";
+    public String pluginName = "EnchantSorter";
 
     private void handleCommand(String command, CommandExecutor handleFunc) {
         PluginCommand p = this.getCommand(command);
@@ -27,11 +27,8 @@ public class EnchantSorter extends JavaPlugin {
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
-        List<String> list = this.getConfig().getStringList("enchants");
-        for(int i=0; i<list.size(); i++) {
-            Message.sendConsoleMessage(this, "-> ["+i+"] "+list.get(i));
-        }
-        handleCommand("enchantsort", new enchantsort(list));
+
+        handleCommand("enchantsort", new enchantsort(this.getConfig().getStringList("enchants")));
 
         Message.sendConsoleMessage(this, Message.notification + "starting plugin: "+this.pluginName);
     }

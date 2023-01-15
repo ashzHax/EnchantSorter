@@ -13,29 +13,21 @@ import java.util.*;
 
 
 public class enchantsort implements CommandExecutor {
-    private List<String> list;
+    private List<String> configurationList;
+    private int configurationListSize;
+
     public enchantsort(List<String> e) {
-        this.list = e;
+        this.configurationList = e;
+        this.configurationListSize = e.size();
     }
 
-    private boolean hasHigherPriority(Player p, String champ, String challanger) {
-        int champ_pos=0;
-        int challanger_pos=0;
-
-        for(int i=0; i<this.list.size(); i++) {
-            if(Objects.equals(this.list.get(i), champ)) {
-                champ_pos = i;
-            }
-            if(Objects.equals(this.list.get(i), challanger)) {
-                challanger_pos = i;
+    private int getPriorityLevel(String key) {
+        for(int i=0; i<this.configurationListSize; i++) {
+            if(Objects.equals(this.configurationList.get(i), key)) {
+                return i;
             }
         }
-
-        if(challanger_pos < champ_pos) {
-            return true;
-        }
-
-        return false;
+        return -1;
     }
 
     @Override
@@ -43,8 +35,10 @@ public class enchantsort implements CommandExecutor {
         Player commandPlayer;
         ItemStack playerHeldItem;
         Map<Enchantment, Integer> enchantmentMap;
-        Set<Enchantment> old_enchantmentList = new LinkedHashSet<Enchantment>();
-        Set<Enchantment> new_enchantmentList = new LinkedHashSet<Enchantment>();
+        Set<Enchantment> new_enchantmentList = new LinkedHashSet<>();
+        Set<Enchantment> old_enchantmentList;
+        int size;
+        Enchantment priority;
 
         if(!(commandSender instanceof Player)) {
             commandSender.sendMessage(Message.error+"player only command");
@@ -53,17 +47,18 @@ public class enchantsort implements CommandExecutor {
 
         commandPlayer = (Player)commandSender;
         playerHeldItem = commandPlayer.getInventory().getItemInMainHand();
-
         enchantmentMap = playerHeldItem.getEnchantments();
+
         if(enchantmentMap.isEmpty()) {
             commandPlayer.sendMessage(Message.error+"you are not holding a enchanted item");
             return false;
         }
 
-        old_enchantmentList.addAll(enchantmentMap.keySet());
-        int size = old_enchantmentList.size();
+        old_enchantmentList = new LinkedHashSet<>(enchantmentMap.keySet());
+        size = old_enchantmentList.size();
+
         for(int i=0; i<size; i++) {
-            Enchantment priority = null;
+            priority = null;
             for(Enchantment e : old_enchantmentList) {
                 // first index handle
                 if(priority == null) {
@@ -71,15 +66,19 @@ public class enchantsort implements CommandExecutor {
                     continue;
                 }
 
-                if(hasHigherPriority(commandPlayer, priority.getKey().getKey(), e.getKey().getKey())) {
+                //if(hasHigherPriority(priority.getKey().getKey(), e.getKey().getKey())) {
+                if(getPriorityLevel(priority.getKey().getKey()) > getPriorityLevel(e.getKey().getKey())) {
                     priority = e;
                 }
             }
-            old_enchantmentList.remove(priority);
-            new_enchantmentList.add(priority);
 
-            // clear all enchant from item
-            playerHeldItem.removeEnchantment(priority);
+            if(priority != null) {
+                old_enchantmentList.remove(priority);
+                new_enchantmentList.add(priority);
+
+                // clear all enchant from item
+                playerHeldItem.removeEnchantment(priority);
+            }
         }
 
         // set enchant on item, get value from old list
@@ -87,7 +86,7 @@ public class enchantsort implements CommandExecutor {
             playerHeldItem.addUnsafeEnchantment(e, enchantmentMap.get(e));
         }
 
-        commandPlayer.getInventory().setItemInMainHand(playerHeldItem);
+        commandSender.sendMessage(Message.notification+"enchantment order has been re-organized");
 
         return true;
     }
